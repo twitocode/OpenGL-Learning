@@ -24,13 +24,13 @@ public class Shader : IDisposable
         int fs = CompileShader(ShaderType.FragmentShader, fragmentShader);
 
         //Attach both to the shaders to one program
-        GL.AttachShader(program, vs);
-        GL.AttachShader(program, fs);
+        Helper.GLCall(() => GL.AttachShader(program, vs));
+        Helper.GLCall(() => GL.AttachShader(program, fs));
 
-        GL.LinkProgram(program);
+        Helper.GLCall(() => GL.LinkProgram(program));
 
         //checks to see whether the executables contained in program can execute given the current OpenGL state
-        GL.ValidateProgram(program);
+        Helper.GLCall(() => GL.ValidateProgram(program));
 
 
         GL.GetProgram(program, GetProgramParameterName.LinkStatus, out int success);
@@ -41,10 +41,10 @@ public class Shader : IDisposable
         }
 
         //We dont need the shaders anymore, they are already linked within the program
-        GL.DetachShader(program, vs);
-        GL.DetachShader(program, fs);
-        GL.DeleteShader(vs);
-        GL.DeleteShader(fs);
+        Helper.GLCall(() => GL.DetachShader(program, vs));
+        Helper.GLCall(() => GL.DetachShader(program, fs));
+        Helper.GLCall(() => GL.DeleteShader(vs));
+        Helper.GLCall(() => GL.DeleteShader(fs));
 
         Program = program;
         return program;
@@ -77,7 +77,7 @@ public class Shader : IDisposable
 
     public void Use()
     {
-        GL.UseProgram(Program);
+        Helper.GLCall(() => GL.UseProgram(Program));
     }
 
     private int CompileShader(ShaderType type, string src)
@@ -85,14 +85,14 @@ public class Shader : IDisposable
         int shaderId = GL.CreateShader(type);
 
         //Tells OpenGL where the shader is and the type
-        GL.ShaderSource(shaderId, src);
-        GL.CompileShader(shaderId);
+        Helper.GLCall(() => GL.ShaderSource(shaderId, src));
+        Helper.GLCall(() => GL.CompileShader(shaderId));
 
         GL.GetShader(shaderId, ShaderParameter.CompileStatus, out int success);
 
         if (success == 0)
         {
-            GL.DeleteShader(shaderId);
+            Helper.GLCall(() => GL.DeleteShader(shaderId));
             string infoLog = GL.GetShaderInfoLog(shaderId);
 
             throw new Exception($"Error while compiling shader of type ${type} Source: \n{src} \n{infoLog}");
