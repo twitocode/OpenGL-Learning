@@ -1,5 +1,4 @@
 ﻿using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
@@ -13,7 +12,7 @@ public class Game : GameWindow
     int ibo;
     Shader shader;
 
-    public Game(int width, int height, string windowName) : base(new GameWindowSettings(), new NativeWindowSettings { Title = windowName, Size = new Vector2i { X = width, Y = height } })
+    public Game(GameWindowSettings gameSettings, NativeWindowSettings nativeWindowSettings) : base(gameSettings, nativeWindowSettings)
     {
 
     }
@@ -21,6 +20,12 @@ public class Game : GameWindow
     protected override void OnLoad()
     {
         base.OnLoad();
+        GL.DebugMessageCallback(Helper.DebugMessageDelegate, IntPtr.Zero);
+        GL.Enable(EnableCap.DebugOutput);
+
+#if DEBUG
+        GL.Enable(EnableCap.DebugOutputSynchronous);
+#endif
 
         //OpenGL has no idea that this data is positional data
         //We have to tell it that it is 
@@ -43,7 +48,7 @@ public class Game : GameWindow
         };
 
         vaoId = GL.GenVertexArray();
-        Helper.GLCall(() => GL.BindVertexArray(vaoId));
+        GL.BindVertexArray(vaoId);
 
         //Creating a buffer in memeory and giving us the id of it back
         //Vertex buffer object
@@ -54,23 +59,23 @@ public class Game : GameWindow
         // It is an array buffer
         //Buffers don't need to have data put into it immediately, you already created space in memory
         //It can be populated later
-        Helper.GLCall(() => GL.BindBuffer(BufferTarget.ArrayBuffer, bufferId));
+        GL.BindBuffer(BufferTarget.ArrayBuffer, bufferId);
 
         //the size of the buffer is in bytes, the amount of bytes 1 float takes can be calculated with sizeof()
         //Then just multiply it by 6 for 6 data points
         //BIG ISSUE, OpenGL does not know what the data in the buffer is used for. It has no idea that this is positional data
-        Helper.GLCall(() => GL.BufferData(BufferTarget.ArrayBuffer, 6 * 2 * sizeof(float), positions, BufferUsageHint.StaticDraw));
+        GL.BufferData(BufferTarget.ArrayBuffer, 6 * 2 * sizeof(float), positions, BufferUsageHint.StaticDraw);
 
         //Index buffer object
         ibo = GL.GenBuffer();
 
-        Helper.GLCall(() => GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo));
+        GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
 
         //MUST BE UNSIGNED
-        Helper.GLCall(() => GL.BufferData(BufferTarget.ElementArrayBuffer, 6 * 2 * sizeof(uint), indices, BufferUsageHint.StaticDraw));
+        GL.BufferData(BufferTarget.ElementArrayBuffer, 6 * 2 * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
         //Best practice to enable the array before setting it
-        Helper.GLCall(() => GL.EnableVertexAttribArray(0));
+        GL.EnableVertexAttribArray(0);
 
         //Color, position, normal, texture coordinate, All of these are ATTRIBUTES
 
@@ -84,10 +89,10 @@ public class Game : GameWindow
 
         //BUFFER MUST BE BOUND FIRST
 
-        Helper.GLCall(() => GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 2, 0));
+        GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 2, 0);
 
         //We are done with the buffer, so unbind it
-        Helper.GLCall(() => GL.BindBuffer(BufferTarget.ArrayBuffer, 0));
+        GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
         shader = new Shader("res/shaders/Basic.shader");
 
@@ -98,10 +103,10 @@ public class Game : GameWindow
     protected override void OnRenderFrame(FrameEventArgs args)
     {
         base.OnRenderFrame(args);
-        Helper.GLCall(() => GL.Clear(ClearBufferMask.ColorBufferBit));
+        GL.Clear(ClearBufferMask.ColorBufferBit);
 
         shader.Use();
-        Helper.GLCall(() => GL.BindBuffer(BufferTarget.ArrayBuffer, bufferId));
+        GL.BindBuffer(BufferTarget.ArrayBuffer, bufferId);
 
         //OpenGL is a state machine, it knows that it should render the triangle specified in the OnLoad method
         //With the buffer that was generated. No need to specify in this function call.
@@ -111,7 +116,7 @@ public class Game : GameWindow
         //6 is the number of indicies we are drawing, not the number of vertices
         //If you do not pass the indicies, it will use the currently bound Element_Array_buffer, which is the indicies from earlier
         //Element == Index (index is more common, think of a list)
-        Helper.GLCall(() => GL.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0));
+        GL.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0);
 
         SwapBuffers();
     }

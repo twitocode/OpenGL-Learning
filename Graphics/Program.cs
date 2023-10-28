@@ -1,6 +1,14 @@
 ﻿using Graphics;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
 
-System.Diagnostics.Debugger.Launch();
+var gameWindowSettings = GameWindowSettings.Default;
 
-using var game = new Game(800, 600, "OpenGL Learning");
+var nativeWindowSettings = new NativeWindowSettings
+{
+    Size = new OpenTK.Mathematics.Vector2i { X = 800, Y = 600 },
+    Flags = ContextFlags.Debug
+};
+
+using var game = new Game(gameWindowSettings, nativeWindowSettings);
 game.Run();
